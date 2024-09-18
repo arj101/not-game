@@ -13,7 +13,7 @@ class AudioEngine {
 
     this.globalGain.gain.exponentialRampToValueAtTime(
       1,
-      this.ctx.currentTime + 0.1
+      this.ctx.currentTime + 0.1,
     );
 
     this.compressor.connect(this.globalGain).connect(this.ctx.destination);
@@ -39,14 +39,77 @@ class AudioEngine {
     const bounceAudioBuffer = await bounceAudio.arrayBuffer();
     this.bounceAudioBuffer = await this.ctx.decodeAudioData(bounceAudioBuffer);
 
-    const bgmElement = document.getElementById("bgm");
-    bgmElement.loop = true;
-    bgmElement.volume = 0.1;
-    this.bgmTrack = this.ctx.createMediaElementSource(bgmElement);
+    //background music---------
+    function createAudioElt(src) {
+      const audioElement = document.createElement("audio");
+      audioElement.src = src;
+      return audioElement;
+    }
+
+    const bgmElts = [
+      createAudioElt("./bgm1.ogg"),
+      createAudioElt("./bgm2.ogg"),
+      createAudioElt("./bgm3.ogg"),
+    ];
+
     const bgmGain = this.ctx.createGain();
-    bgmGain.gain.linearRampToValueAtTime(0.1, this.ctx.currentTime + 0.1);
-    this.bgmTrack.connect(bgmGain).connect(this.compressor);
-    bgmElement.play();
+    bgmGain.gain.setValueAtTime(0, this.ctx.currentTime);
+    bgmGain.gain.linearRampToValueAtTime(1.0, this.ctx.currentTime + 10);
+    bgmGain.connect(this.compressor);
+
+    const getDuration = (audioElement) => {
+      return new Promise((resolve) => {
+        if (audioElement.duration) {
+          resolve(audioElement.duration);
+          return;
+        }
+        audioElement.addEventListener("loadedmetadata", () => {
+          resolve(audioElement.duration);
+        });
+      });
+    };
+
+    let prevIndex = -1;
+
+    const playBgm = async () => {
+      for (const bgmElement of bgmElts) {
+        bgmElement.currentTime = 0;
+        bgmElement.volume = 0.0;
+      }
+
+      let bgmIndex = Math.floor(Math.random() * bgmElts.length);
+      if (bgmIndex == prevIndex) {
+        bgmIndex = (bgmIndex + 1) % bgmElts.length;
+      }
+      prevIndex = bgmIndex;
+
+      bgmGain.gain.setValueAtTime(0, this.ctx.currentTime);
+      bgmGain.gain.linearRampToValueAtTime(1.0, this.ctx.currentTime + 8);
+      const duration = await getDuration(bgmElts[bgmIndex]);
+      bgmGain.gain.setValueAtTime(
+        1.0,
+        Math.max(this.ctx.currentTime + duration - 8, this.ctx.currentTime),
+      );
+      bgmGain.gain.linearRampToValueAtTime(
+        0.0,
+        this.ctx.currentTime + duration,
+      );
+      bgmElts[bgmIndex].volume = 1.0;
+      bgmElts[bgmIndex].play();
+
+      bgmElts[bgmIndex].addEventListener("ended", () => {
+        playBgm();
+      });
+    };
+
+    for (const bgmElement of bgmElts) {
+      const bgmTrack = this.ctx.createMediaElementSource(bgmElement);
+      bgmTrack.connect(bgmGain);
+    }
+
+    playBgm();
+
+    //--------------------------
   }
 
   playAudio(vol = 1.0, pos = { x: null, y: null }) {

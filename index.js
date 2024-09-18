@@ -36,7 +36,6 @@ async function main() {
   const u_texture = gl.getUniformLocation(program, "texture");
 
   const texImage = await loadImage("./e.png");
-  console.log(texImage);
   const texture = new Texture(gl, 0, texImage);
 
   let player = {
@@ -51,14 +50,14 @@ async function main() {
     player.x - player.w / 2,
     player.y - player.h / 2,
     player.w,
-    player.h
+    player.h,
   );
   const guy = new Drawable(
     gl,
     program,
     sprite2DAttrs(),
     rect.vertices,
-    rect.vertexCount
+    rect.vertexCount,
   );
 
   let leftDown = false;
@@ -100,7 +99,7 @@ async function main() {
             0.15 +
             delta.y * cos(player.angle) +
             delta.x * sin(player.angle),
-          player.angle
+          player.angle,
         );
       }, 100);
     }
@@ -156,8 +155,8 @@ async function main() {
       transform(
         rotAtMat4(0, -0.15, 0, 0, 0, player.angle),
         translateMat4(player.x, player.y, 0),
-        screenScale
-      )
+        screenScale,
+      ),
     );
     texture.bindTexture(u_texture);
     guy.draw(gl.TRIANGLES);
