@@ -54,8 +54,11 @@ class Bullet {
 
     const dx = this.x - this.prevX;
     const dy = this.y - this.prevY;
-    if (bounce && Math.sqrt(dx * dx + dy * dy) > 1e-2) {
-      const volume = (bounceY ? Math.abs(dx) : Math.abs(dy)) * 10;
+    if (bounce) {
+      const volume = Math.min(
+        (bounceY ? Math.abs(dy) : Math.abs(dx)) * 10,
+        0.4
+      );
       this.audio.playAudio(volume, {
         x: (this.x * window.innerWidth) / 2 + window.innerWidth / 2,
         y: (1.0 - (this.y + 1.0) * 0.5) * window.innerHeight,

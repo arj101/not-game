@@ -89,7 +89,7 @@ async function main() {
 
     const delta = { x: 0.2, y: 0.083 };
     if (e.key == " ") {
-      audio.playAudio(1.0, {
+      audio.playAudio(0.3, {
         x: (player.x * xScale * window.innerWidth) / 2 + window.innerWidth / 2,
         y: (1.0 - (1.0 + player.y) * 0.5) * window.innerHeight,
       });

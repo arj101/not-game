@@ -1,17 +1,28 @@
 class AudioEngine {
   constructor() {
     this.ctx = new AudioContext();
+    this.hasInit = false;
     this.audioElement = document.getElementById("audio");
     this.compressor = new DynamicsCompressorNode(this.ctx, {
       ratio: 20,
       attack: 1,
       release: 1,
     });
+
+    this.globalGain = this.ctx.createGain();
+
+    this.globalGain.gain.exponentialRampToValueAtTime(
+      4,
+      this.ctx.currentTime + 0.1
+    );
+
+    this.compressor.connect(this.globalGain).connect(this.ctx.destination);
   }
 
   async init() {
+    this.hasInit = true;
     this.ctx.resume();
-    
+
     const listener = this.ctx.listener;
     const posX = window.innerWidth / 2;
     const posY = window.innerHeight / 2;
@@ -30,16 +41,12 @@ class AudioEngine {
 
     const bgmElement = document.getElementById("bgm");
     bgmElement.loop = true;
+    bgmElement.volume = 0.1;
     this.bgmTrack = this.ctx.createMediaElementSource(bgmElement);
-    this.bgmTrack.connect(this.compressor).connect(this.ctx.destination);
+    const bgmGain = this.ctx.createGain();
+    bgmGain.gain.linearRampToValueAtTime(0.1, this.ctx.currentTime + 0.1);
+    this.bgmTrack.connect(bgmGain).connect(this.compressor);
     bgmElement.play();
-    // Note: Removed this.bgmTrack.start(); as it's not a method of MediaElementAudioSourceNode
-
-    // bgmElement.addEventListener("ended", () => {
-    //   bgmElement.currentTime = 0;
-    //   bgmElement.play();
-    //   // Removed this.bgmTrack.start();
-    // });
   }
 
   playAudio(vol = 1.0, pos = { x: null, y: null }) {
@@ -47,7 +54,8 @@ class AudioEngine {
     source.buffer = this.bounceAudioBuffer;
     const gain = this.ctx.createGain();
 
-    gain.gain.linearRampToValueAtTime(vol, this.ctx.currentTime + 0.5);
+    gain.gain.setValueAtTime(0.0001, this.ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(vol, this.ctx.currentTime + 0.1);
 
     const panner = new PannerNode(this.ctx, {
       panningModel: "HRTF",
@@ -60,17 +68,13 @@ class AudioEngine {
       orientationZ: -1,
       refDistance: 1,
       maxDistance: 10000,
-      rolloffFactor: 50,
+      rolloffFactor: 10,
       coneInnerAngle: 60,
       coneOuterAngle: 90,
       coneOuterGain: 0.4,
     });
 
-    source
-      .connect(panner)
-      .connect(gain)
-      .connect(this.compressor)
-      .connect(this.ctx.destination);
+    source.connect(panner).connect(gain).connect(this.compressor);
 
     source.start();
   }
