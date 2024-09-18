@@ -27,16 +27,18 @@ class AudioEngine {
     this.bounceAudioBuffer = await this.ctx.decodeAudioData(bounceAudioBuffer);
 
     const bgmElement = document.getElementById("bgm");
+    bgmElement.loop = true;
+
     this.bgmTrack = this.ctx.createMediaElementSource(bgmElement);
     this.bgmTrack.connect(this.compressor).connect(this.ctx.destination);
 
     bgmElement.play();
     this.bgmTrack.start();
-    bgmElement.addEventListener("ended", () => {
-      bgmElement.currentTime = 0;
-      bgmElement.play();
-      this.bgmTrack.start();
-    });
+    // bgmElement.addEventListener("ended", () => {
+    //   bgmElement.currentTime = 0;
+    //   bgmElement.play();
+    //   this.bgmTrack.start();
+    // });
   }
 
   playAudio(vol = 1.0, pos = { x: null, y: null }) {
