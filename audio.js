@@ -12,7 +12,7 @@ class AudioEngine {
     this.globalGain = this.ctx.createGain();
 
     this.globalGain.gain.exponentialRampToValueAtTime(
-      4,
+      1,
       this.ctx.currentTime + 0.1
     );
 
@@ -50,12 +50,11 @@ class AudioEngine {
   }
 
   playAudio(vol = 1.0, pos = { x: null, y: null }) {
+    if (vol <= 0.0) return; //no need to play then lol
+
     const source = this.ctx.createBufferSource();
     source.buffer = this.bounceAudioBuffer;
     const gain = this.ctx.createGain();
-
-    gain.gain.setValueAtTime(0.0001, this.ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(vol, this.ctx.currentTime + 0.1);
 
     const panner = new PannerNode(this.ctx, {
       panningModel: "HRTF",
@@ -74,8 +73,11 @@ class AudioEngine {
       coneOuterGain: 0.4,
     });
 
+    // vol *= 10.0;
+    // console.log(vol);
+    gain.gain.setValueAtTime(0.0001, this.ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(vol, this.ctx.currentTime + 0.05);
     source.connect(panner).connect(gain).connect(this.compressor);
-
     source.start();
   }
 }
