@@ -10,7 +10,7 @@ class AudioEngine {
   }
 
   async init() {
-    await this.ctx.resume();
+    this.ctx.resume();
     
     const listener = this.ctx.listener;
     const posX = window.innerWidth / 2;
