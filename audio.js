@@ -2,42 +2,43 @@ class AudioEngine {
   constructor() {
     this.ctx = new AudioContext();
     this.audioElement = document.getElementById("audio");
-
     this.compressor = new DynamicsCompressorNode(this.ctx, {
       ratio: 20,
       attack: 1,
       release: 1,
     });
-
-    const listener = this.ctx.listener;
-
-    const posX = window.innerWidth / 2;
-    const posY = window.innerHeight / 2;
-    const posZ = 0;
-
-    listener.positionX.value = posX;
-    listener.positionY.value = posY;
-    listener.positionZ.value = posZ - 5;
   }
 
   async init() {
-    this.ctx.resume();
+    await this.ctx.resume();
+    
+    const listener = this.ctx.listener;
+    const posX = window.innerWidth / 2;
+    const posY = window.innerHeight / 2;
+    const posZ = 0;
+    if (listener.positionX) {
+      listener.positionX.value = posX;
+      listener.positionY.value = posY;
+      listener.positionZ.value = posZ - 5;
+    } else {
+      listener.setPosition(posX, posY, posZ - 5);
+    }
+
     const bounceAudio = await fetch("./bounce.mp3");
     const bounceAudioBuffer = await bounceAudio.arrayBuffer();
     this.bounceAudioBuffer = await this.ctx.decodeAudioData(bounceAudioBuffer);
 
     const bgmElement = document.getElementById("bgm");
     bgmElement.loop = true;
-
     this.bgmTrack = this.ctx.createMediaElementSource(bgmElement);
     this.bgmTrack.connect(this.compressor).connect(this.ctx.destination);
-
     bgmElement.play();
-    this.bgmTrack.start();
+    // Note: Removed this.bgmTrack.start(); as it's not a method of MediaElementAudioSourceNode
+
     // bgmElement.addEventListener("ended", () => {
     //   bgmElement.currentTime = 0;
     //   bgmElement.play();
-    //   this.bgmTrack.start();
+    //   // Removed this.bgmTrack.start();
     // });
   }
 
@@ -45,10 +46,6 @@ class AudioEngine {
     const source = this.ctx.createBufferSource();
     source.buffer = this.bounceAudioBuffer;
     const gain = this.ctx.createGain();
-
-    // this.compressor.ratio.setValueAtTime(20, this.ctx.currentTime);
-    // this.compressor.attack.setValueAtTime(1, this.ctx.currentTime);
-    // this.compressor.release.setValueAtTime(1, this.ctx.currentTime);
 
     gain.gain.linearRampToValueAtTime(vol, this.ctx.currentTime + 0.5);
 
@@ -74,6 +71,7 @@ class AudioEngine {
       .connect(gain)
       .connect(this.compressor)
       .connect(this.ctx.destination);
+
     source.start();
   }
 }
