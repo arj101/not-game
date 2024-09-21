@@ -57,7 +57,7 @@ class Bullet {
     if (bounce) {
       const volume = Math.min(
         (bounceY ? Math.abs(dy) : Math.abs(dx)) * 10,
-        0.4
+        0.4,
       );
       this.audio.playAudio(volume, {
         x: (this.x * window.innerWidth) / 2 + window.innerWidth / 2,
@@ -111,7 +111,7 @@ void main() {
       this.program,
       sprite2DAttrs(),
       this.bulletVertices.vertices,
-      this.bulletVertices.vertexCount
+      this.bulletVertices.vertexCount,
     );
     gl.useProgram(this.program);
 
@@ -161,8 +161,8 @@ void main() {
         transform(
           rotAtMat4(0, 0.0, 0, 0, 0, Math.atan2(bullet.vel.y, bullet.vel.x)),
           translateMat4(bullet.x, bullet.y, 0),
-          screenScale || identityMat4()
-        )
+          screenScale || identityMat4(),
+        ),
       );
 
       this.drawable.justDraw(this.gl.TRIANGLES);
